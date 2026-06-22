@@ -3,37 +3,5 @@ sqlalchemy==2.0.41
 psycopg2-binary==2.9.10
 python-dateutil==2.9.0.post0
 openai==1.93.0
+requests==2.32.5
 
-
-# python -m venv venv
-
-# source venv/bin/activate
-
-# pip install -r requirements.txt
-
-
-
-# README.md
-
-# Example:
-
-# AI Pipeline Project
-
-## Setup Instructions
-
-# ### 1. Clone repo
-# ```bash
-# git clone https://github.com/your-username/your-repo.git
-# cd your-repo
-# 2. Create virtual environment
-# python3 -m venv venv
-# source venv/bin/activate   # Mac/Linux
-# venv\Scripts\activate      # Windows
-# 3. Install dependencies
-# pip install -r requirements.txt
-# 4. Run pipeline
-# python run_pipeline.py
-
-# brew install ollama
-# ollama run llama3
-# brew services start ollama

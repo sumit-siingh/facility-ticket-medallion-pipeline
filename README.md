@@ -525,7 +525,43 @@ Only schema metadata and representative samples would be sent to the LLM to redu
 
 # ▶️ How To Run
 
-## 1. Start PostgreSQL
+## 1. Clone Repo
+
+```bash
+git clone https://github.com/your-username/your-repo.git
+cd your-repo
+```
+---
+
+## 2. Create Virtual Environment
+
+```bash
+python3 -m venv venv
+
+source venv/bin/activate
+```
+
+---
+
+## 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+## 4. Setup LLM (Ollama)
+
+```bash
+brew install ollama
+
+ollama serve
+ollama run llama3
+```
+
+---
+
+## 5. Start PostgreSQL
 
 ```bash
 docker-compose up -d
@@ -533,15 +569,9 @@ docker-compose up -d
 
 ---
 
-## 2. Install Dependencies
 
-```bash
-pip install -r requirements.txt
-```
 
----
-
-## 3. Run Pipeline
+## 6. Run Pipeline
 
 ```bash
 python run_pipeline.py
@@ -549,7 +579,7 @@ python run_pipeline.py
 
 ---
 
-## 4. Query Results
+## 7. Query Results
 
 ### Bronze
 

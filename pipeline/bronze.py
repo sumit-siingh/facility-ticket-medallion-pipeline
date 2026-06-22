@@ -101,6 +101,10 @@ def is_file_already_loaded(file_hash: str) -> bool:
     return result is not None
 
 def ensure_column_exists():
+
+    if not table_exists():
+        return
+
     query = """
     ALTER TABLE bronze.tickets_raw
     ADD COLUMN IF NOT EXISTS source_file_hash TEXT;
@@ -118,8 +122,6 @@ def load_bronze():
     logger.info("Starting Bronze Layer Ingestion")
 
     batch_id = str(uuid.uuid4())
-
-    ensure_column_exists()
     
     try:
 
@@ -129,7 +131,7 @@ def load_bronze():
 
         file_hash = get_file_hash(SOURCE_FILE)
 
-        if is_file_already_loaded(file_hash):
+        if table_exists() and is_file_already_loaded(file_hash):
             logger.info("File already ingested. Skipping Bronze load.")
             return {
                 "status": "skipped",
@@ -184,6 +186,13 @@ def load_bronze():
 
         logger.info(f"Total null values: {total_nulls:,}")
         logger.info(f"Batch ID: {batch_id}")
+
+        # ----------------------------------------------------------
+        # Ensure schema exists BEFORE writing
+        # ----------------------------------------------------------
+
+        if table_exists():
+            ensure_column_exists()
 
         # ----------------------------------------------------------
         # Write Bronze
