@@ -1,362 +1,611 @@
-AI-Assisted Medallion Data Pipeline
-Overview
+# 🚀 AI-Assisted Medallion Data Pipeline
+
+## Overview
 
 This project implements a Medallion Architecture pipeline using PostgreSQL:
 
+```text
 Bronze → Silver → Gold
+```
 
 The pipeline processes facilities management ticket data and demonstrates how AI agents can accelerate data engineering workflows.
 
-Architecture
+---
 
-(paste diagram here)
+# 🏗️ Architecture
 
-Layer Design
-Bronze Layer
+```text
+                    +------------------+
+                    | raw_tickets.csv  |
+                    +---------+--------+
+                              |
+                              v
+                    +------------------+
+                    | Bronze Layer     |
+                    | bronze.tickets   |
+                    |                  |
+                    | Raw ingestion    |
+                    | Row hash         |
+                    | Source file      |
+                    | Batch id         |
+                    | Ingested at      |
+                    +---------+--------+
+                              |
+                              v
+                    +------------------+
+                    | Silver Layer     |
+                    | silver.tickets   |
+                    |                  |
+                    | Deduplication    |
+                    | Validation       |
+                    | Type conversion  |
+                    | Standardization  |
+                    | Quality flags    |
+                    +---------+--------+
+                              |
+            +----------------+----------------+
+            |                                 |
+            v                                 v
 
-Schema:
++----------------------+      +-------------------------+
+| Data Quality Agent   |      | Gold Design Agent       |
+|                      |      |                         |
+| Profiling            |      | KPI recommendations     |
+| Null analysis        |      | Business model design   |
+| Schema inference     |      | Aggregation proposals   |
++-----------+----------+      +-----------+-------------+
+            |                             |
+            +-------------+---------------+
+                          |
+                          v
 
+                  +---------------+
+                  | Gold Layer    |
+                  |               |
+                  | ticket_kpis   |
+                  | building_hotspots |
+                  | assignee_performance |
+                  +---------------+
+```
+
+---
+
+# 🥉 Bronze Layer
+
+### Schema
+
+```sql
 bronze.tickets_raw
+```
 
-Purpose:
+### Purpose
 
-Raw ingestion
-Schema-on-read
-No data loss
-Lineage tracking
+* Raw ingestion
+* Schema-on-read
+* No data loss
+* Lineage tracking
 
-Metadata added:
+### Metadata Added
 
-Column	Purpose
-source_file	source file name
-source_file_hash	file-level idempotency
-batch_id	ingestion batch tracking
-ingested_at	ingestion timestamp
-row_hash	row-level lineage
-Idempotency
+| Column           | Purpose                              |
+| ---------------- | ------------------------------------ |
+| source_file      | Source file name                     |
+| source_file_hash | File-level idempotency               |
+| batch_id         | Ingestion batch tracking             |
+| ingested_at      | Ingestion timestamp                  |
+| row_hash         | Row-level lineage and dedup tracking |
 
-The Bronze layer computes:
+### Idempotency
 
+The Bronze layer computes a hash of the input file before ingestion:
+
+```python
 MD5(file)
-
-before ingestion.
+```
 
 If the file has already been loaded:
 
+```text
 Skip ingestion
+```
 
-This allows safe reruns without duplicate data.
+This allows the pipeline to be safely rerun without creating duplicate records.
 
-Silver Layer
+---
 
-Schema:
+# 🥈 Silver Layer
 
+### Schema
+
+```sql
 silver.tickets
+```
 
-Purpose:
+### Purpose
 
-Cleansing
-Standardization
-Deduplication
-Validation
-Cleaning Rules
-Ticket Deduplication
+* Cleansing
+* Standardization
+* Deduplication
+* Validation
 
-Rule:
+---
 
+## Cleaning Rules
+
+### 1. Ticket Deduplication
+
+**Rule**
+
+```text
 Keep latest record per ticket_id
+```
 
-Reason:
+**Reason**
 
-Duplicate tickets should not inflate metrics.
+Duplicate tickets should not inflate reporting metrics.
 
-Priority Normalization
+---
+
+### 2. Priority Normalization
 
 Examples:
 
+```text
 High
 HIGH
 high
 H
+```
 
-become
+Normalized to:
 
+```text
 HIGH
+```
 
-Reason:
+**Reason**
 
-Consistent analytics.
+Ensures consistent reporting and aggregation.
 
-Category Standardization
+---
+
+### 3. Category Standardization
 
 Examples:
 
+```text
 Electrical
 electrical
 Electrical Issue
+```
 
-normalized into a standard category.
+Mapped into standardized categories.
 
-Reason:
+**Reason**
 
-Prevent fragmented reporting.
+Prevents fragmented analytics caused by inconsistent category names.
 
-Cost Cleaning
+---
 
-Rule:
+### 4. Cost Cleaning
 
-Convert to numeric
+**Rule**
+
+```text
+Convert values to numeric
 Invalid values → NULL
+```
 
-Reason:
+**Reason**
 
-Support financial analysis.
+Enables reliable financial analysis.
 
-Quality Flags
+---
+
+### 5. Quality Flags
 
 Issues tracked:
 
-Missing ticket id
-Missing creation date
-Missing category
-Missing priority
-Invalid cost
+* Missing ticket_id
+* Missing created_at
+* Missing category
+* Missing priority
+* Invalid cost
 
-Reason:
+**Reason**
 
-Enable downstream quality monitoring.
+Supports downstream monitoring and data quality reporting.
 
-Gold Layer
+---
 
-Schema:
+# 🥇 Gold Layer
 
+### Schemas
+
+```sql
 gold.ticket_kpis
 gold.building_hotspots
 gold.assignee_performance
-1. ticket_kpis
+```
 
-Business purpose:
+---
 
-Track operational performance.
+## 1. ticket_kpis
 
-Metrics:
+### Business Purpose
 
-ticket count
-resolution rate
-average resolution time
-2. building_hotspots
+Track overall operational performance.
 
-Business purpose:
+### Metrics
 
-Identify buildings generating the most tickets.
+* Ticket count
+* Resolution rate
+* Average resolution time
+* Open vs Closed ticket ratio
 
-Metrics:
+---
 
-ticket volume
-average cost
-resolution trends
-3. assignee_performance
+## 2. building_hotspots
 
-Business purpose:
+### Business Purpose
 
-Evaluate maintenance team performance.
+Identify buildings generating the highest ticket volume.
 
-Metrics:
+### Metrics
 
-assigned tickets
-resolved tickets
-average resolution time
-Agentic Acceleration
+* Ticket volume
+* Average maintenance cost
+* Resolution trends
+* High-priority ticket concentration
 
-Two agents were implemented.
+---
 
-Agent 1: Data Quality Agent
+## 3. assignee_performance
 
-Type:
+### Business Purpose
 
-Rule-based local agent
+Measure maintenance team performance.
 
-Purpose:
+### Metrics
 
-Automatically profile data and infer schema.
+* Assigned tickets
+* Resolved tickets
+* Average resolution time
+* Resolution rate
 
-Input:
+---
 
-silver dataframe
+# 🤖 Agentic Acceleration
 
-Output:
+Two agents were implemented to accelerate data engineering tasks.
 
+---
+
+# Agent 1 — Data Quality Agent
+
+### Type
+
+```text
+Rule-Based Local Agent
+```
+
+### Purpose
+
+Automatically profile datasets and infer schema characteristics.
+
+### Input
+
+```python
+silver_dataframe
+```
+
+### Output
+
+```python
 {
-  row_count,
-  null_rates,
-  unique_counts,
-  inferred_schema
+    "row_count": ...,
+    "null_rates": ...,
+    "unique_counts": ...,
+    "inferred_schema": ...
 }
+```
 
-Example Output:
+### Example Output
 
+```python
 {
-  "cost_clean": {
-      "null_rate": 0.37
-  }
+    "cost_clean": {
+        "null_rate": 0.37
+    }
 }
-Value Added
+```
+
+### Value Added
 
 Without the agent:
 
+```text
 Manual profiling
-Manual schema review
+Manual schema inspection
+```
 
 With the agent:
 
+```text
 Automatic quality assessment
 Automatic schema inference
+```
 
-Estimated time saved:
+### Estimated Time Saved
 
-15-30 minutes per dataset
-Agent 2: Gold Design Agent
+```text
+15–30 minutes per dataset
+```
 
-Type:
+---
 
+# Agent 2 — Gold Design Agent
+
+### Type
+
+```text
 Local LLM (Ollama)
+```
 
-Model:
+### Model
 
-llama3
+```text
+Llama 3
+```
 
-Purpose:
+### Purpose
 
-Suggest useful business-facing Gold models.
+Suggest useful business-facing Gold models and KPIs.
 
-Input:
+### Input
 
-schema
+```text
+Schema
 +
-data profile
+Data Profile
+```
 
-Output:
+### Output
 
-Building Performance
-Assignee Performance
-Operational Bottlenecks
+Example recommendation:
 
-Example:
-
+```json
 {
   "name": "Assignee Performance",
   "metrics": [
-      "Average Resolution Time",
-      "Resolution Rate"
+    "Average Resolution Time",
+    "Resolution Rate"
   ]
 }
-Value Added
+```
+
+### Sample Suggestions Generated
+
+* Building Performance
+* Assignee Performance
+* Operational Bottlenecks
+* SLA Compliance
+
+### Value Added
 
 Without the agent:
 
+```text
 Manual KPI discovery
 Manual dashboard brainstorming
+```
 
 With the agent:
 
+```text
 Automatic business metric suggestions
+```
 
-Estimated time saved:
+### Estimated Time Saved
 
-30-60 minutes
-Honest Agent Assessment
-Data Quality Agent
+```text
+30–60 minutes
+```
 
-Worth keeping:
+---
+
+# 📊 Honest Agent Assessment
+
+## Data Quality Agent
+
+### Worth Keeping?
 
 ✅ Yes
 
-Reason:
+### Reason
 
-Produces deterministic profiling quickly and reliably.
+Produces deterministic and reliable profiling results quickly.
 
-Gold Design Agent
+Useful for:
 
-Worth keeping:
+* Initial data exploration
+* Data quality reviews
+* Schema understanding
+
+---
+
+## Gold Design Agent
+
+### Worth Keeping?
 
 ✅ Yes, with human review
 
-Reason:
+### Reason
 
-Produces useful ideas but occasionally suggests unrealistic metrics.
+Provides useful business ideas and KPI suggestions.
 
-Human approval should remain part of the workflow.
+However, some recommendations may be unrealistic or not aligned with business requirements.
 
-Cost and Scale Considerations
+A human should always approve Gold-layer models before implementation.
 
-Current dataset:
+---
 
-~10k rows
+# ⚖️ Cost and Scale Considerations
 
-Production scale:
+### Current Dataset
 
+```text
+~10K rows
+```
+
+### Production Scale
+
+```text
 10M+ rows
+```
 
-Changes required:
+---
 
-Bronze
+## Bronze Layer
 
-Current:
+### Current
 
-Pandas
+```text
+Pandas ingestion
+```
 
-Production:
+### Production
 
-COPY command
+```text
+PostgreSQL COPY
 Partitioned tables
-Incremental loads
-Silver
+Incremental ingestion
+```
 
-Current:
+---
 
+## Silver Layer
+
+### Current
+
+```text
 Pandas transformations
+```
 
-Production:
+### Production
 
-SQL transformations
-Spark / dbt
-Agents
+```text
+SQL-based transformations
+dbt
+Apache Spark
+```
 
-Current:
+---
 
-Full dataset profile
+## Agents
 
-Production:
+### Current
 
-Sample-based profiling
+```text
+Full dataset profiling
+```
+
+### Production
+
+```text
+Sampling
 Caching
 Batch processing
+Metadata-only analysis
+```
 
-Only schema metadata and samples would be sent to the LLM.
+Only schema metadata and representative samples would be sent to the LLM to reduce cost and latency.
 
-How To Run
-Start PostgreSQL
+---
+
+# ▶️ How To Run
+
+## 1. Start PostgreSQL
+
+```bash
 docker-compose up -d
-Install dependencies
+```
+
+---
+
+## 2. Install Dependencies
+
+```bash
 pip install -r requirements.txt
-Run pipeline
+```
+
+---
+
+## 3. Run Pipeline
+
+```bash
 python run_pipeline.py
-Query results
+```
+
+---
+
+## 4. Query Results
+
+### Bronze
+
+```sql
 SELECT * FROM bronze.tickets_raw LIMIT 10;
+```
 
+### Silver
+
+```sql
 SELECT * FROM silver.tickets LIMIT 10;
+```
 
+### Gold
+
+```sql
 SELECT * FROM gold.ticket_kpis;
 
 SELECT * FROM gold.building_hotspots;
 
 SELECT * FROM gold.assignee_performance;
-Technologies Used
-Python
-PostgreSQL
-Pandas
-SQLAlchemy
-Docker
-Ollama
-Llama 3
-Medallion Architecture
+```
+
+---
+
+# 🛠️ Technologies Used
+
+* Python
+* PostgreSQL
+* Pandas
+* SQLAlchemy
+* Docker
+* Ollama
+* Llama 3
+* Medallion Architecture
+
+---
+
+# 🎯 Assignment Requirements Coverage
+
+| Requirement              | Status |
+| ------------------------ | ------ |
+| Bronze Layer             | ✅      |
+| Silver Layer             | ✅      |
+| Gold Layer               | ✅      |
+| Lineage Metadata         | ✅      |
+| Idempotent Pipeline      | ✅      |
+| Re-runnable Pipeline     | ✅      |
+| Data Quality Agent       | ✅      |
+| Gold Design Agent        | ✅      |
+| Local LLM Integration    | ✅      |
+| Logging & Monitoring     | ✅      |
+| Scale Considerations     | ✅      |
+| Architecture Diagram     | ✅      |
+| Agent Assessment         | ✅      |
+| Single Command Execution | ✅      |
+
+```
+```
