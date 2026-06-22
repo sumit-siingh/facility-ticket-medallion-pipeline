@@ -1,0 +1,48 @@
+Here are the three proposed gold-layer business tables:
+
+[
+  {
+    "name": "assignee_performance",
+    "purpose": "Measure assignee performance and identify top-performing assignees.",
+    "metrics": [
+      {
+        "metric_name": "mean_resolution_time",
+        "description": "Mean time taken by an assignee to resolve a ticket."
+      },
+      {
+        "metric_name": "ticket_resolution_rate",
+        "description": "Percentage of tickets successfully resolved by an assignee."
+      }
+    ]
+  },
+  {
+    "name": "sla_compliance",
+    "purpose": "Measure SLA compliance and identify areas for improvement.",
+    "metrics": [
+      {
+        "metric_name": "mean_sladeviation",
+        "description": "Mean deviation from the expected resolution time (SLA) in hours."
+      },
+      {
+        "metric_name": "sla_violation_rate",
+        "description": "Percentage of tickets that exceed the SLA resolution time."
+      }
+    ]
+  },
+  {
+    "name": "bottleneck_identification",
+    "purpose": "Identify operational bottlenecks and areas for improvement.",
+    "metrics": [
+      {
+        "metric_name": "mean_ticket_age",
+        "description": "Mean age of tickets in days, indicating potential bottlenecks."
+      },
+      {
+        "metric_name": "ticket_queue_size",
+        "description": "Average size of the ticket queue, indicating workload and potential bottlenecks."
+      }
+    ]
+  }
+]
+
+These gold-layer tables aim to capture key business metrics that can help facilities management teams identify areas for improvement, measure assignee performance, and monitor SLA compliance.

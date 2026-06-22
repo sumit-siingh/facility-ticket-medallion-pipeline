@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env
+
+# Mac
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Database files
+*.db
+
+# Ollama models cache
+.ollama/
+
+# Python envs
+.python-version
+
+# Jupyter
+.ipynb_checkpoints/
