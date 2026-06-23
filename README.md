@@ -528,8 +528,8 @@ Only schema metadata and representative samples would be sent to the LLM to redu
 ## 1. Clone Repo
 
 ```bash
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
+git clone https://github.com/sumit-siingh/facility-ticket-medallion-pipeline.git
+cd facility-ticket-medallion-pipeline
 ```
 ---
 
